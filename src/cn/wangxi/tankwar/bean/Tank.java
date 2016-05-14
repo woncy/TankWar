@@ -2,6 +2,9 @@ package cn.wangxi.tankwar.bean;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.util.Random;
+
+import javax.swing.JPanel;
 
 import cn.wangxi.tankwar.gui.GameFrame;
 
@@ -10,11 +13,27 @@ public class Tank {
 	private int width,height;
 	private Color color;
 	
+	private boolean live = true;
+	private int moveCount = 0;
+	private boolean good = false;
+	private int speed = 5;
 	
+	GameFrame game;
 	
+	Random dirControl = new Random();
+	public boolean isGood() {
+		return good;
+	}
+	public void setGood(boolean good) {
+		this.good = good;
+	}
+
 	private boolean bL = false,bR = false,bD = false,bU = false;
 	
-	
+	private int minRandomCount = 10;
+	private int maxRandomCount = 30;
+	private Random random = new Random();
+	private int nextnum = 10;
 
 	public enum Direction {LEFT,RIGHT,UP,DOWN,STOP};
 	private Direction dir=Direction.STOP;
@@ -41,6 +60,15 @@ public class Tank {
 		this.width = width;
 		this.height = height;
 		this.color = color;
+	}
+	
+	public Tank(int x, int y, int width, int height, GameFrame game) {
+		super();
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		this.game = game;
 	}
 	public int getX() {
 		return x;
@@ -92,30 +120,54 @@ public class Tank {
 		}
 	}
 	
+	public void setRandomDir() {
+		int dirNum = dirControl.nextInt(4);
+		if(dirNum == 0) {
+			dir = Direction.UP;
+		}else if(dirNum == 1) {
+			dir = Direction.DOWN;
+		}else if(dirNum == 2) {
+			dir = Direction.LEFT;
+		}else if(dirNum == 3) {
+			dir = Direction.RIGHT;
+		}
+		this.game.addBullet(fire());
+		this.game.addBullet(fire());
+		nextnum = random.nextInt(maxRandomCount-minRandomCount)+minRandomCount;
+	}
+	
 	public void move() {
-		setDir();
+		
+		if(good == false) {
+			moveCount ++;
+			if(moveCount == nextnum ) {
+				setRandomDir();
+				moveCount =0;
+			}
+		}else 
+			setDir();
 		if(dir == Direction.STOP)  {
 			
 		}else if(dir == Direction.RIGHT) {
 			
-			x++;
+			x+=speed;
 			if(x>=GameFrame.WIDTH-width-pt.getWidth()) {
 				x = GameFrame.WIDTH-width-pt.getWidth();
 			}
 		} else if(dir == Direction.LEFT) {
 			
-			x--;
+			x-=speed;
 			if(x<=0+pt.getWidth()) {
 				x = 0+pt.getWidth();
 			}
 		} else if(dir == Direction.UP) {
 			
-			y--;
-			if(y<=26+pt.getHeight()) {
-				y=26+pt.getHeight();
+			y-=speed;
+			if(y<=pt.getHeight()) {
+				y=pt.getHeight();
 			}
 		} else {
-			y++;
+			y+=speed;
 			if(y>=GameFrame.HEIGHT-height-pt.getHeight()) {
 				y=GameFrame.HEIGHT-height-pt.getHeight();
 			}
@@ -155,12 +207,23 @@ public class Tank {
 		return this.dir;
 	}
 	
-	public void draw(Graphics g) {
-		Color c = g.getColor();
-		g.setColor(color);
-		g.fillRect(x, y, width, height);
-		g.setColor(c);
-		pt.draw(g);
-		move();
+	public void draw(Graphics g) { 
+		if(live){
+			Color c = g.getColor();
+			if(good == true)
+				g.setColor(color);
+			else if(good == false)
+				g.setColor(Color.red);
+			g.fillRect(x, y, width, height);
+			g.setColor(c);
+			pt.draw(g);
+			move();
+		}
+	}
+	public boolean isLive() {
+		return live;
+	}
+	public void setLive(boolean live) {
+		this.live = live;
 	}
 }
